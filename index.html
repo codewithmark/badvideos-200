@@ -1,0 +1,267 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"  href="css/bootstrap.min.css">
+<link rel="stylesheet"  href="css/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet"  href="css/animate.css">
+ 
+<script src="https://apimk.com/cdn/awesome-functions/awesome-functions.js"></script>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/admob_simple.js"></script>
+
+
+
+ <style type="text/css">
+  
+  .LinkCSS{
+    text-decoration: none;
+    color:white;
+  }
+  .amounts {
+    text-align: center;
+  }
+  .amounts label {
+      display: inline-block;
+      min-width: 150px;
+  }
+  .totals {
+      color: #080;
+  }
+  </style>
+<script>
+$(document).ready(function()
+{
+  GetNewVideos ()
+
+  function GetNewVideos () 
+  {
+    $('.VideoData').html('');
+    $('.Loadding').show();
+
+    //var ajaxurl = "http://apimk.com/_dl/app/ajax.php";
+    var ajaxurl = "http://apimk.com/_00_apps/awesomelybadvideos/ajax.php";
+
+    $.post(ajaxurl,{datacheck:"getfiles"} ,function(data, status)
+    {
+      var Obj = JSON.parse(data);
+
+      if(Obj["Status"] == "Success")
+      {
+        //console.log(Obj.FileData);
+        var FileData = Obj.FileData;
+
+        for (var i = 0; i < FileData.length; i++) 
+        {
+          if(FileData[i].filetype =="video")
+          {
+            var ID = FileData[i].quickkey;
+            var FileID = FileData[i].links.normal_download;
+            var FileName = js.GetFileName(FileData[i].filename);
+            
+            var strDIV = '<div style="padding:5px;"> ';
+            strDIV += '<video id="'+ID+'" class="VideoDIV" height="360" width="85%" controls preload="metadata" src="'+FileID+'" poster="" FileName="'+FileName+'">';
+            strDIV += '</video>';
+            strDIV += '</div>'
+            strDIV += '<br>';
+            $('.VideoData').append(strDIV);
+          }
+        }
+        
+        $('.VideoDIV').each(function (index, value) 
+        { 
+          var FileName_Video = $(this).attr('FileName');
+
+          for (var i = 0; i < FileData.length; i++) 
+          {
+            if(FileData[i].filetype =="image")
+            {
+              var IMG_File_URL = FileData[i].links.normal_download;
+              var FileName_IMG = js.GetFileName(FileData[i].filename);
+
+              if(FileName_Video == FileName_IMG)
+              {
+                //console.log('FileName_IMG ' + FileName_IMG + ' FileName_url - ' + IMG_File_URL);
+                $(this).attr('poster', IMG_File_URL);
+              }
+            }
+          };           
+        })
+        $('.Loadding').hide();
+      }
+    });
+        
+  }
+
+    $(document).on('click', '.VideoDIV', function(event) 
+    {
+      if (this.paused) 
+      {
+        this.play();
+
+        var ABV_VideoID = "ABV_VideoID";
+        var VideoID = $(this).attr('id');
+
+        if (!c.Get(ABV_VideoID)) 
+    	{
+        	c.Add(ABV_VideoID,VideoID);
+
+        	//AdSystem();
+        }
+        AdSystem();
+        
+        //var FileName = $(this).attr('FileName');
+        //console.log(FileName);
+      } 
+      else 
+      {
+          this.pause();
+      } 
+    });
+
+    function AdSystem () 
+    { 	
+    	//Total number of times user clicked play
+    	var Ad_Curr_Counter = "ABV_Ad_Curr_Counter";
+
+    	//Until next ad will show
+    	var Ad_End_Counter = "ABV_Ad_End_Counter";
+    	
+
+    	//Check if counter is set
+    	if (!ls.Exist(Ad_Curr_Counter)) 
+    	{
+    		var EndCounter = CreateAdEndCounter(5, 15);
+
+    		ls.Add(Ad_Curr_Counter,1);
+			ls.Add(Ad_End_Counter,EndCounter); 
+    	} 
+    	else if (ls.Exist(Ad_Curr_Counter)) 
+    	{
+    		var CurCounter = ls.Get(Ad_Curr_Counter);
+    		var GetEndCounter = ls.Get(Ad_End_Counter);
+    		
+    		if(CurCounter < GetEndCounter)
+    		{
+    			ls.Add(Ad_Curr_Counter,js.Int(CurCounter)+1 ) ;
+
+    			console.log('  Ad_Curr_Counter = ' + CurCounter );
+    			console.log('  Ad_End_Counter = ' + EndCounter );
+    		}
+    		else if(CurCounter >= GetEndCounter)
+    		{
+    			//show ad
+    			ShowAd('fullscreen');
+
+    			console.log('showing ad Ad_Curr_Counter' + Ad_Curr_Counter );
+
+				var EndCounter = CreateAdEndCounter(5, 15);
+
+				//Reset counter
+				ls.Add(Ad_Curr_Counter,1);
+				ls.Add(Ad_End_Counter,EndCounter); 
+    		}
+    	}
+    		
+    }
+
+	function CreateAdEndCounter(min, max) 
+	{
+		return Math.floor(Math.random() * (max - min + 1)) + min;
+	}
+    $(document).on('click', '.Menu', function(event) 
+    {
+      var MenuID = $(this).attr('MenuID');
+
+      if(MenuID == "GotoTop")
+      {
+        $("#GotoTop").scrollTop();
+         $("html, body").animate({ scrollTop: 0 }, "slow");
+        console.log('clicked');
+
+      }
+      else if(MenuID == "Refresh")
+      {
+        GetNewVideos();
+      }
+
+      
+
+    });
+
+
+ 
+});
+
+ 
+</script>
+</head>
+<body>
+<!--[Menu - Start]-->
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header text-center" style="padding:5px;">
+        <div class="fa fa-2x LinkCSS">Awesomely Bad Videos</div>
+                
+            </div>
+
+  
+        </div>
+
+        <!-- /.container -->
+    </nav>
+<!--[Menu - End]-->
+
+<div style="padding:30px;"></div> 
+ 
+<div id="GotoTop"></div>
+
+<div class="Loadding text-center" style="padding-top: 200px;"> 
+  <h1 class="animated infinite bounce">
+  	<img src="phonegap_icon_template.png">
+  	<br>
+  	Loading...
+
+  </h1>
+</div>
+
+
+<div class="VideoData text-center"> </div>
+
+
+<div style="padding:30px;"></div> 
+
+
+
+<!--[Footer Menu - Start]-->
+
+<div class="navbar-brand navbar navbar-inverse navbar-fixed-bottom" style="padding:5px;" >
+  
+  <div class="LinkCSS pull-left Menu " MenuID="GotoTop" >
+    <i class="fa fa-1x fa-arrow-up" style="font-size:25px;"></i>
+    <br>
+    <small>Top</small>
+     
+  </div>
+  
+  <div  class="LinkCSS pull-right Menu " MenuID="Refresh">   
+    <i class="fa fa-2x fa-refresh pull-center" style="font-size:25px;align:center"></i>
+    <br>
+    <small>Refresh</small>
+    
+  </div>
+
+</div>
+<!--[Footer Menu - End]-->
+
+</body>
+</html>
+
+ 
